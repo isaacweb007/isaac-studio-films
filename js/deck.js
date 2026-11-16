@@ -38,19 +38,28 @@
     return;
   }
 
+  function activate(i){
+    var s=slides[i]; if(!s)return;
+    if(!s.classList.contains('in')){
+      s.classList.add('in');
+      s.querySelectorAll('[data-count]:not(.done)').forEach(function(el){el.classList.add('done');count(el);});
+    }
+    s.querySelectorAll('video.bg').forEach(function(v){v.play&&v.play().catch(function(){});});
+    if(cur!==i){cur=i;update();}
+  }
   var io=new IntersectionObserver(function(es){
     es.forEach(function(e){
-      if(e.isIntersecting && e.intersectionRatio>0.5){
-        e.target.classList.add('in');
-        e.target.querySelectorAll('[data-count]:not(.done)').forEach(function(el){el.classList.add('done');count(el);});
-        e.target.querySelectorAll('video.bg').forEach(function(v){v.play&&v.play().catch(function(){});});
-        cur=slides.indexOf(e.target); update();
-      }else{
-        e.target.querySelectorAll('video.bg').forEach(function(v){v.pause&&v.pause();});
-      }
+      if(e.isIntersecting && e.intersectionRatio>0.5){activate(slides.indexOf(e.target));}
+      else{e.target.querySelectorAll('video.bg').forEach(function(v){v.pause&&v.pause();});}
     });
   },{threshold:[0.55]});
   slides.forEach(function(s){io.observe(s);});
+  // fallback: whichever slide sits at the viewport centre after scrolling settles
+  var st; function settle(){clearTimeout(st);st=setTimeout(function(){
+    var mid=window.scrollY+window.innerHeight/2;
+    for(var i=0;i<total;i++){var r=slides[i].offsetTop; if(mid>=r && mid<r+slides[i].offsetHeight){activate(i);break;}}
+  },120);}
+  window.addEventListener('scroll',settle,{passive:true}); window.addEventListener('load',settle);
 
   var prog=document.querySelector('.progress'), ctr=document.querySelector('.counter');
   function update(){
@@ -66,6 +75,6 @@
   });
   var pv=document.querySelector('.nav .prev'), nx=document.querySelector('.nav .next');
   if(pv)pv.onclick=function(){go(cur-1);}; if(nx)nx.onclick=function(){go(cur+1);};
-  var m=location.hash.match(/#s(\d+)/); if(m){setTimeout(function(){slides[Math.min(total,+m[1])-1].scrollIntoView();},50);}
-  update();
+  var m=location.hash.match(/#s(\d+)/); if(m){setTimeout(function(){slides[Math.min(total,+m[1])-1].scrollIntoView({behavior:'instant'});settle();},50);}
+  update(); settle();
 })();

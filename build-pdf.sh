@@ -10,6 +10,6 @@ for lang in "${@:-ko}"; do
   if [ "$lang" = "ko" ]; then page="index.html"; else page="$lang.html"; fi
   "$CHROME" --headless=new --disable-gpu --window-size=1920,1080 --force-device-scale-factor=1 \
     --no-pdf-header-footer --run-all-compositor-stages-before-draw --virtual-time-budget=20000 \
-    --print-to-pdf="$PWD/pdf/isaac-studio-slate-$lang.pdf" "$BASE/$page?print=1" 2>/dev/null
+    --print-to-pdf="$PWD/pdf/isaac-studio-slate-$lang.pdf" "$BASE/$page?print=1" 2>/dev/null || true  # chrome exits non-zero after a successful print
   echo "pdf/isaac-studio-slate-$lang.pdf  $(du -h "pdf/isaac-studio-slate-$lang.pdf" | cut -f1)"
 done
